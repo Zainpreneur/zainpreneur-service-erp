@@ -1,16 +1,54 @@
-@import "tailwindcss";
-
 :root {
   color-scheme: dark;
 }
 
 body {
-  background: #020617;
+  background-color: #020617;
   color: #e2e8f0;
+}
+
+.dark body, .dark {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+}
+
+.light body {
+  background-color: #f8fafc;
+  color: #0f172a;
 }
 
 .glass {
   background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+input, select, textarea {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+.light input, .light select, .light textarea {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

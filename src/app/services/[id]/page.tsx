@@ -31,15 +31,15 @@ export default function ServiceDetailPage() {
   };
   useEffect(() => { load(); }, [id]);
 
-  if (!service) return <p className="text-slate-400">Loading...</p>;
+  if (!service) return <p className="text-slate-600 dark:text-slate-400">Loading...</p>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/services" className="text-slate-400 hover:text-slate-100"><ArrowLeft size={20} /></Link>
+        <Link href="/services" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"><ArrowLeft size={20} /></Link>
         <div>
           <h1 className="text-2xl font-bold">{service.name}</h1>
-          <p className="text-sm text-slate-400">{service.code} · {service.categoryName} · {service.currency} {service.basePrice}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">{service.code} · {service.categoryName} · {service.currency} {service.basePrice}</p>
         </div>
         <Badge color={service.active ? 'emerald' : 'rose'} className="ml-auto">{service.active ? 'Active' : 'Archived'}</Badge>
       </div>
@@ -56,12 +56,12 @@ export default function ServiceDetailPage() {
         <TabsContent value="overview">
           <Card>
             <CardHeader><CardTitle>Description</CardTitle></CardHeader>
-            <p className="text-slate-300">{service.description}</p>
+            <p className="text-slate-600 dark:text-slate-400">{service.description}</p>
             <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-              <div><span className="text-slate-500">Type:</span> {service.serviceType}</div>
-              <div><span className="text-slate-500">Team:</span> {service.team}</div>
-              <div><span className="text-slate-500">Delivery:</span> {service.deliveryDays} days</div>
-              <div><span className="text-slate-500">Base cost:</span> {service.currency} {service.baseCost}</div>
+              <div><span className="text-slate-500 dark:text-slate-500">Type:</span> {service.serviceType}</div>
+              <div><span className="text-slate-500 dark:text-slate-500">Team:</span> {service.team}</div>
+              <div><span className="text-slate-500 dark:text-slate-500">Delivery:</span> {service.deliveryDays} days</div>
+              <div><span className="text-slate-500 dark:text-slate-500">Base cost:</span> {service.currency} {service.baseCost}</div>
             </div>
           </Card>
         </TabsContent>
@@ -74,11 +74,11 @@ export default function ServiceDetailPage() {
             </CardHeader>
             <div className="space-y-3">
               {variants.map((v: any) => (
-                <div key={v.id} className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                <div key={v.id} className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 p-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{v.name}</p>
-                      <p className="text-xs text-slate-500">{v.code}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-500">{v.code}</p>
                     </div>
                     <div className="text-sm font-semibold">{v.currency} {v.price}</div>
                   </div>
@@ -93,7 +93,7 @@ export default function ServiceDetailPage() {
                   ) : null}
                 </div>
               ))}
-              {variants.length === 0 && <p className="text-slate-500">No variants yet.</p>}
+              {variants.length === 0 && <p className="text-slate-500 dark:text-slate-500">No variants yet.</p>}
             </div>
           </Card>
         </TabsContent>
@@ -105,10 +105,10 @@ export default function ServiceDetailPage() {
               {svcAttrs.map((sa: any) => {
                 const a = attrs.find((x: any) => x.id === sa.attributeId);
                 return (
-                  <div key={sa.attributeId} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+                  <div key={sa.attributeId} className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 p-3">
                     <div>
                       <p className="font-medium">{a?.name ?? sa.attributeId}</p>
-                      <p className="text-xs text-slate-500">{a?.displayType} · {a?.category}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-500">{a?.displayType} · {a?.category}</p>
                     </div>
                     <div className="flex gap-2">
                       {sa.required ? <Badge color="rose">Required</Badge> : null}
@@ -117,7 +117,7 @@ export default function ServiceDetailPage() {
                   </div>
                 );
               })}
-              {svcAttrs.length === 0 && <p className="text-slate-500">No attributes linked.</p>}
+              {svcAttrs.length === 0 && <p className="text-slate-500 dark:text-slate-500">No attributes linked.</p>}
             </div>
           </Card>
         </TabsContent>
@@ -127,13 +127,13 @@ export default function ServiceDetailPage() {
             <CardHeader><CardTitle>Configuration Rules</CardTitle></CardHeader>
             <div className="space-y-2">
               {rules.map((r: any) => (
-                <div key={r.id} className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
-                  <p className="font-medium">{r.name} <span className="text-xs text-slate-500">({r.fieldType})</span></p>
-                  {r.options?.length ? <p className="text-xs text-slate-500">Options: {r.options.join(', ')}</p> : null}
+                <div key={r.id} className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 p-3">
+                  <p className="font-medium">{r.name} <span className="text-xs text-slate-500 dark:text-slate-500">({r.fieldType})</span></p>
+                  {r.options?.length ? <p className="text-xs text-slate-500 dark:text-slate-500">Options: {r.options.join(', ')}</p> : null}
                   {r.isRequired ? <Badge color="rose" className="mt-1">Required</Badge> : null}
                 </div>
               ))}
-              {rules.length === 0 && <p className="text-slate-500">No configuration rules.</p>}
+              {rules.length === 0 && <p className="text-slate-500 dark:text-slate-500">No configuration rules.</p>}
             </div>
           </Card>
         </TabsContent>
@@ -143,12 +143,12 @@ export default function ServiceDetailPage() {
             <CardHeader><CardTitle>Support Info</CardTitle></CardHeader>
             {support ? (
               <div className="grid grid-cols-1 gap-3 text-sm">
-                <div><span className="text-slate-500">Email:</span> {support.supportEmail}</div>
-                <div><span className="text-slate-500">Phone:</span> {support.supportPhone}</div>
-                <div><span className="text-slate-500">Hours:</span> {support.supportHours}</div>
-                <div><span className="text-slate-500">SLA:</span> {support.slaResponseTime}</div>
+                <div><span className="text-slate-500 dark:text-slate-500">Email:</span> {support.supportEmail}</div>
+                <div><span className="text-slate-500 dark:text-slate-500">Phone:</span> {support.supportPhone}</div>
+                <div><span className="text-slate-500 dark:text-slate-500">Hours:</span> {support.supportHours}</div>
+                <div><span className="text-slate-500 dark:text-slate-500">SLA:</span> {support.slaResponseTime}</div>
               </div>
-            ) : <p className="text-slate-500">No support info.</p>}
+            ) : <p className="text-slate-500 dark:text-slate-500">No support info.</p>}
           </Card>
         </TabsContent>
       </Tabs>

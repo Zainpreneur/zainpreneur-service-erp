@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/cn';
 
 const colors: Record<string, string> = {
-  default: 'bg-slate-700 text-slate-200',
+  default: 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100',
   indigo: 'bg-indigo-600/20 text-indigo-300',
   emerald: 'bg-emerald-600/20 text-emerald-300',
   amber: 'bg-amber-600/20 text-amber-300',

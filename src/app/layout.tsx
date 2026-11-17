@@ -13,6 +13,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: "tailwind.config = { darkMode: 'class' };" }} />
+        <script src="https://cdn.tailwindcss.com" />
+      </head>
       <body className={inter.className}>
         <AppShell>{children}</AppShell>
       </body>
