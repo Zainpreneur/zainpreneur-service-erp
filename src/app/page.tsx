@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { FileText, Ticket, Package, Building2, TrendingUp } from 'lucide-react';
+import { FileText, Ticket, Package, Building2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {

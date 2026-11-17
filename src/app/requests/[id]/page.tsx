@@ -4,8 +4,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Input, Select, Textarea } from '@/components/ui/Input';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { Select } from '@/components/ui/Input';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function RequestDetailPage() {

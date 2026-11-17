@@ -50,7 +50,9 @@ export function updateTicket(idOrRef: string, patch: Partial<TicketInput> & Reco
   };
   for (const [k,col] of Object.entries(map)) if (Object.prototype.hasOwnProperty.call(patch,k)) { fields.push(`${col}=@${col}`); params[col]=(patch as any)[k] ?? null; }
   if (patch.resolvedAt !== undefined) { fields.push('resolved_at=@resolved_at'); params.resolved_at = patch.resolvedAt; }
+  else if (patch.status === 'resolved') { fields.push('resolved_at=@resolved_at'); params.resolved_at = new Date().toISOString(); }
   if (patch.closedAt !== undefined) { fields.push('closed_at=@closed_at'); params.closed_at = patch.closedAt; }
+  else if (patch.status === 'closed') { fields.push('closed_at=@closed_at'); params.closed_at = new Date().toISOString(); }
   if (!fields.length) return existing;
   fields.push('updated_at=@updated_at'); params.updated_at = new Date().toISOString();
   db.prepare(`UPDATE helpdesk_tickets SET ${fields.join(',')} WHERE id=@id`).run(params);

@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Layers, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 export default function AttributesPage() {
   const [attrs, setAttrs] = useState<any[]>([]);

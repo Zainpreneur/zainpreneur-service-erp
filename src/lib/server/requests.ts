@@ -70,6 +70,7 @@ export function updateRequest(idOrRef: string, patch: Partial<ServiceRequestInpu
     }
   }
   if (patch.selectedVariants !== undefined) { fields.push('selected_variants=@selected_variants'); params.selected_variants = JSON.stringify(patch.selectedVariants); }
+  if (patch.status === 'completed' && !('completedAt' in patch)) { fields.push('completed_at=@completed_at'); params.completed_at = new Date().toISOString(); }
   if (patch.configuration !== undefined) { fields.push('configuration=@configuration'); params.configuration = JSON.stringify(patch.configuration); }
   if (patch.addOns !== undefined) { fields.push('add_ons=@add_ons'); params.add_ons = JSON.stringify(patch.addOns); }
   if (!fields.length) return existing;

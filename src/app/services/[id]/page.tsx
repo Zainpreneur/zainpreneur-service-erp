@@ -15,6 +15,7 @@ export default function ServiceDetailPage() {
   const [service, setService] = useState<any>(null);
   const [variants, setVariants] = useState<any[]>([]);
   const [attrs, setAttrs] = useState<any[]>([]);
+  const [attrValues, setAttrValues] = useState<any[]>([]);
   const [svcAttrs, setSvcAttrs] = useState<any[]>([]);
   const [rules, setRules] = useState<any[]>([]);
   const [support, setSupport] = useState<any>(null);
@@ -23,6 +24,7 @@ export default function ServiceDetailPage() {
     fetch(`/api/services/${id}`).then(r => r.json()).then(setService);
     fetch(`/api/variants?serviceId=${id}`).then(r => r.json()).then(setVariants);
     fetch('/api/attributes').then(r => r.json()).then(setAttrs);
+    fetch('/api/attribute-values').then(r => r.json()).then(setAttrValues);
     fetch(`/api/service-attributes?serviceId=${id}`).then(r => r.json()).then(setSvcAttrs);
     fetch(`/api/config-rules?serviceId=${id}`).then(r => r.json()).then(setRules);
     fetch(`/api/support-info?serviceId=${id}`).then(r => r.json()).then(setSupport);
@@ -84,8 +86,8 @@ export default function ServiceDetailPage() {
                     <div className="mt-2 flex flex-wrap gap-2">
                       {v.values.map((val: any, i: number) => {
                         const a = attrs.find((x: any) => x.id === val.attributeId);
-                        const av = a ? null : null;
-                        return <Badge key={i} color="indigo">{a?.name}: {val.attributeValueId}</Badge>;
+                        const av = attrValues.find((x: any) => x.id === val.attributeValueId);
+                        return <Badge key={i} color="indigo">{a?.name}: {av?.name ?? val.attributeValueId}</Badge>;
                       })}
                     </div>
                   ) : null}
