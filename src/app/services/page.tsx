@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -15,6 +16,7 @@ export default function ServicesPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<ViewMode>('card');
+  const router = useRouter();
 
   const load = () => {
     setLoading(true);
@@ -32,9 +34,11 @@ export default function ServicesPage() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">Services</h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Service catalogue with variants, attributes and configuration.</p>
         </div>
-        <button className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-          <Plus size={16} /> New Service
-        </button>
+        <Link href="/services/new">
+          <button className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+            <Plus size={16} /> New Service
+          </button>
+        </Link>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

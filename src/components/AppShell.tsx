@@ -170,13 +170,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           const active = pathname === n.href || (n.href !== '/' && pathname.startsWith(n.href));
           const Icon = n.icon;
           return (
-            <Link key={n.href} href={n.href} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs ${active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400'}`}>
-              <Icon size={20} />
-              <span>{n.label}</span>
+            <Link key={n.href} href={n.href} className={`flex flex-1 flex-col items-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400'}`} aria-label={n.label}>
+              <Icon size={20} className="hover:text-indigo-500 dark:hover:text-indigo-300" />
+              <span className="hidden sm:block">{n.label}</span>
             </Link>
           );
-        })}
-      </nav>
+        })</nav>
 
       <Toaster theme={resolvedTheme} position="top-right" />
     </div>

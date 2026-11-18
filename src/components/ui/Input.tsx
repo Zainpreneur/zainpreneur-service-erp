@@ -1,17 +1,36 @@
 import React from 'react';
 import { cn } from '@/lib/cn';
 
-export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => (
-  <input ref={ref} className={cn('w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-500 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600', className)} {...props} />
-));
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  error?: boolean;
+}
+
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, error, ...props }, ref) => {
+  const baseClasses = 'input-field';
+  const errorClasses = error ? 'border-red-500 dark:border-red-400 shadow-red-500/10' : '';
+  
+  return (
+    <input ref={ref} className={cn(baseClasses, errorClasses, className)} {...props} />
+  );
+});
 Input.displayName = 'Input';
 
-export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(({ className, ...props }, ref) => (
-  <textarea ref={ref} className={cn('w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-500 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600', className)} {...props} />
-));
+export const Textarea = React.forwardRef<HTMLTextAreaElement, InputProps>(({ className, error, ...props }, ref) => {
+  const baseClasses = 'textarea-field';
+  const errorClasses = error ? 'border-red-500 dark:border-red-400 shadow-red-500/10' : '';
+  
+  return (
+    <textarea ref={ref} className={cn(baseClasses, errorClasses, className)} {...props} />
+  );
+});
 Textarea.displayName = 'Textarea';
 
-export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(({ className, ...props }, ref) => (
-  <select ref={ref} className={cn('w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600', className)} {...props} />
-));
+export const Select = React.forwardRef<HTMLSelectElement, InputProps>(({ className, error, ...props }, ref) => {
+  const baseClasses = 'select-field';
+  const errorClasses = error ? 'border-red-500 dark:border-red-400 shadow-red-500/10' : '';
+  
+  return (
+    <select ref={ref} className={cn(baseClasses, errorClasses, className)} {...props} />
+  );
+});
 Select.displayName = 'Select';

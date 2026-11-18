@@ -32,7 +32,8 @@ export function StatCard({
       )}
     </div>
   );
-  const cls = 'rounded-xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 p-4 shadow-sm transition hover:border-indigo-600/40 hover:shadow-md';
+  const cls = 'stat-card rounded-xl border p-4 transition-all hover:border-[var(--ring)] fade-in';
+  const containerCls = 'container mt-4 max-w-2xl mx-auto';
   if (href) return <Link href={href} className={cls}>{content}</Link>;
-  return <div className={cls}>{content}</div>;
+  return <div className={containerCls}>{content}</div>;
 }
