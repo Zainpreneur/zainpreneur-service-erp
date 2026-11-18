@@ -5,6 +5,14 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
 }
 
+interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  error?: boolean;
+}
+
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  error?: boolean;
+}
+
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, error, ...props }, ref) => {
   const baseClasses = 'input-field';
   const errorClasses = error ? 'border-red-500 dark:border-red-400 shadow-red-500/10' : '';
@@ -15,7 +23,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className
 });
 Input.displayName = 'Input';
 
-export const Textarea = React.forwardRef<HTMLTextAreaElement, InputProps>(({ className, error, ...props }, ref) => {
+export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, error, ...props }, ref) => {
   const baseClasses = 'textarea-field';
   const errorClasses = error ? 'border-red-500 dark:border-red-400 shadow-red-500/10' : '';
   
@@ -25,7 +33,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, InputProps>(({ cla
 });
 Textarea.displayName = 'Textarea';
 
-export const Select = React.forwardRef<HTMLSelectElement, InputProps>(({ className, error, ...props }, ref) => {
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({ className, error, ...props }, ref) => {
   const baseClasses = 'select-field';
   const errorClasses = error ? 'border-red-500 dark:border-red-400 shadow-red-500/10' : '';
   
