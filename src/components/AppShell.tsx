@@ -31,17 +31,9 @@ type Theme = 'light' | 'dark' | 'system';
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-  const [theme, setTheme] = useState<Theme>('system');
+  const [collapsed, setCollapsed] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('sidebar-collapsed') === 'true' : false));
+  const [theme, setTheme] = useState<Theme>(() => (typeof window !== 'undefined' ? (localStorage.getItem('theme') as Theme) || 'system' : 'system'));
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
-
-  // load persisted preferences
-  useEffect(() => {
-    const t = (localStorage.getItem('theme') as Theme) || 'system';
-    const c = localStorage.getItem('sidebar-collapsed') === 'true';
-    setTheme(t);
-    setCollapsed(c);
-  }, []);
 
   // resolve theme
   useEffect(() => {

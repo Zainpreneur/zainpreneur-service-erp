@@ -284,5 +284,165 @@ CREATE TABLE IF NOT EXISTS ticket_events (
 );
 `);
 
+// ---- Parity migrations (idempotent) ----
+function tryAlter(sql: string) { try { db.exec(sql); } catch (e) { /* column/table already exists */ } }
+
+// businesses
+tryAlter(`ALTER TABLE businesses ADD COLUMN code TEXT`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN relationship TEXT NOT NULL DEFAULT 'client'`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN parent_business_id INTEGER REFERENCES businesses(id)`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN is_customer INTEGER NOT NULL DEFAULT 0`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN is_portfolio INTEGER NOT NULL DEFAULT 0`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN relationships TEXT NOT NULL DEFAULT '[]'`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN industry TEXT`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN contact_role TEXT`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN social_linkedin TEXT`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN social_twitter TEXT`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN social_facebook TEXT`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN social_instagram TEXT`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN social_website TEXT`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN tier TEXT`);
+tryAlter(`ALTER TABLE businesses ADD COLUMN health_score INTEGER`);
+
+// people
+tryAlter(`ALTER TABLE people ADD COLUMN discipline TEXT`);
+tryAlter(`ALTER TABLE people ADD COLUMN hourly_rate REAL NOT NULL DEFAULT 0`);
+tryAlter(`ALTER TABLE people ADD COLUMN weekly_hours REAL NOT NULL DEFAULT 40`);
+tryAlter(`ALTER TABLE people ADD COLUMN classification TEXT NOT NULL DEFAULT 'internal'`);
+tryAlter(`ALTER TABLE people ADD COLUMN employment_type TEXT NOT NULL DEFAULT 'full_time'`);
+tryAlter(`ALTER TABLE people ADD COLUMN compensation_model TEXT NOT NULL DEFAULT 'hourly'`);
+tryAlter(`ALTER TABLE people ADD COLUMN resource_status TEXT NOT NULL DEFAULT 'active'`);
+tryAlter(`ALTER TABLE people ADD COLUMN tax_or_vendor_id TEXT`);
+tryAlter(`ALTER TABLE people ADD COLUMN overtime_multiplier REAL NOT NULL DEFAULT 1.5`);
+tryAlter(`ALTER TABLE people ADD COLUMN max_billable_hours REAL`);
+tryAlter(`ALTER TABLE people ADD COLUMN monthly_salary REAL`);
+tryAlter(`ALTER TABLE people ADD COLUMN payroll_schedule TEXT`);
+tryAlter(`ALTER TABLE people ADD COLUMN allowance_limit REAL`);
+tryAlter(`ALTER TABLE people ADD COLUMN invoice_requirement TEXT`);
+tryAlter(`ALTER TABLE people ADD COLUMN tax_document_kind TEXT`);
+tryAlter(`ALTER TABLE people ADD COLUMN tax_document_status TEXT NOT NULL DEFAULT 'missing'`);
+tryAlter(`ALTER TABLE people ADD COLUMN tax_document_expires TEXT`);
+tryAlter(`ALTER TABLE people ADD COLUMN payable_schedule TEXT`);
+tryAlter(`ALTER TABLE people ADD COLUMN bank_account_ref TEXT`);
+
+// services
+tryAlter(`ALTER TABLE services ADD COLUMN archived_reason TEXT`);
+
+// service_requests
+tryAlter(`ALTER TABLE service_requests ADD COLUMN requested_by TEXT NOT NULL DEFAULT 'Zainpreneur'`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN contact_role TEXT`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN special_requirements TEXT`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN variant_extra REAL NOT NULL DEFAULT 0`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN additional_services REAL NOT NULL DEFAULT 0`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN discount_amount REAL NOT NULL DEFAULT 0`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN final_amount REAL NOT NULL DEFAULT 0`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN snapshot TEXT NOT NULL DEFAULT '{}'`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN resources TEXT NOT NULL DEFAULT '[]'`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN deployment TEXT`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN delivery_summary TEXT`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN delivered_at TEXT`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN fulfilled_at TEXT`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN closed_at TEXT`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN branch_id INTEGER`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN scope_mode TEXT NOT NULL DEFAULT 'single'`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN parent_request_id INTEGER REFERENCES service_requests(id)`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN preferred_window TEXT`);
+tryAlter(`ALTER TABLE service_requests ADD COLUMN retention_account_id INTEGER`);
+
+// helpdesk_tickets
+tryAlter(`ALTER TABLE helpdesk_tickets ADD COLUMN subject TEXT`);
+tryAlter(`ALTER TABLE helpdesk_tickets ADD COLUMN contact_role TEXT`);
+tryAlter(`ALTER TABLE helpdesk_tickets ADD COLUMN variant_id INTEGER REFERENCES service_variants(id)`);
+tryAlter(`ALTER TABLE helpdesk_tickets ADD COLUMN resolution TEXT`);
+tryAlter(`ALTER TABLE helpdesk_tickets ADD COLUMN resolution_summary TEXT`);
+tryAlter(`ALTER TABLE helpdesk_tickets ADD COLUMN assigned_team TEXT`);
+
+// business_contacts
+db.exec(`
+CREATE TABLE IF NOT EXISTS business_contacts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  role TEXT,
+  email TEXT,
+  phone TEXT,
+  is_primary INTEGER NOT NULL DEFAULT 0,
+  notes TEXT,
+  created_at TEXT NOT NULL
+);
+`);
+
+// business_branches
+db.exec(`
+CREATE TABLE IF NOT EXISTS business_branches (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  city TEXT,
+  country TEXT,
+  created_at TEXT NOT NULL
+);
+`);
+
+// retention_accounts
+db.exec(`
+CREATE TABLE IF NOT EXISTS retention_accounts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  account_ref TEXT NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  primary_account INTEGER NOT NULL DEFAULT 0,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  UNIQUE (business_id, name)
+);
+`);
+
+// ticket_relations
+db.exec(`
+CREATE TABLE IF NOT EXISTS ticket_relations (
+  ticket_id INTEGER NOT NULL REFERENCES helpdesk_tickets(id) ON DELETE CASCADE,
+  related_id INTEGER NOT NULL REFERENCES helpdesk_tickets(id) ON DELETE CASCADE,
+  PRIMARY KEY (ticket_id, related_id)
+);
+`);
+
+// tags
+db.exec(`
+CREATE TABLE IF NOT EXISTS tags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  archived_at TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS service_tags (
+  service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+  tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (service_id, tag_id)
+);
+CREATE TABLE IF NOT EXISTS request_tags (
+  request_id INTEGER NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
+  tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (request_id, tag_id)
+);
+CREATE TABLE IF NOT EXISTS ticket_tags (
+  ticket_id INTEGER NOT NULL REFERENCES helpdesk_tickets(id) ON DELETE CASCADE,
+  tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (ticket_id, tag_id)
+);
+CREATE TABLE IF NOT EXISTS business_tags (
+  business_id INTEGER NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (business_id, tag_id)
+);
+CREATE TABLE IF NOT EXISTS person_tags (
+  person_id INTEGER NOT NULL REFERENCES people(id) ON DELETE CASCADE,
+  tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (person_id, tag_id)
+);
+`);
+
 export default db;
 export { db };

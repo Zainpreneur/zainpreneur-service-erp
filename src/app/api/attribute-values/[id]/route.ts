@@ -9,7 +9,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   return NextResponse.json(v);
 }
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  svc.deleteAttributeValue(Number(id));
-  return NextResponse.json({ ok: true });
+  try {
+    const { id } = await params;
+    svc.deleteAttributeValue(Number(id));
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json({ error: 'Cannot delete: record is in use' }, { status: 409 });
+  }
 }

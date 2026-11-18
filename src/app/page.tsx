@@ -1,15 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/Badge';
-import { StatCard } from '@/components/ui/StatCard';
+import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { FileText, Ticket, Package, Building2, Plus } from 'lucide-react';
-import Link from 'next/link';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { FileText, Ticket, Package, Building2, Plus, Users } from 'lucide-react';
+import { StatCard } from '@/components/ui/StatCard';
+import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 
 export default function DashboardPage() {
-  const [data, setData] = useState<any>({ services: [], requests: [], tickets: [], businesses: [] });
+  const [data, setData] = useState<any>({ services: [], requests: [], tickets: [], businesses: [], people: [] });
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     Promise.all([
@@ -17,48 +19,45 @@ export default function DashboardPage() {
       fetch('/api/requests').then(r => r.json()),
       fetch('/api/tickets').then(r => r.json()),
       fetch('/api/businesses').then(r => r.json()),
-    ]).then(([services, requests, tickets, businesses]) => {
-      setData({ services, requests, tickets, businesses });
+      fetch('/api/people').then(r => r.json()),
+    ]).then(([services, requests, tickets, businesses, people]) => {
+      setData({ services, requests, tickets, businesses, people });
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
 
   const stats = [
-    { label: 'Services', value: data.services.length, icon: Package, color: 'primary' as const, href: '/services' },
-    { label: 'Service Requests', value: data.requests.length, icon: FileText, color: 'accent' as const, href: '/requests' },
-    { label: 'Help Desk Tickets', value: data.tickets.length, icon: Ticket, color: 'warning' as const, href: '/tickets' },
-    { label: 'Businesses', value: data.businesses.length, icon: Building2, color: 'success' as const, href: '/businesses' },
+    { label: 'Services', value: data.services.length, icon: Package, color: 'primary', href: '/services', trend: { direction: 'up', label: '+12%', value: 'vs last week' } },
+    { label: 'Service Requests', value: data.requests.length, icon: FileText, color: 'accent', href: '/requests', trend: { direction: 'down', label: '-5%', value: 'vs last week' } },
+    { label: 'Help Desk Tickets', value: data.tickets.length, icon: Ticket, color: 'warning', href: '/tickets', trend: { direction: 'up', label: '+8%', value: 'vs last week' } },
+    { label: 'Businesses', value: data.businesses.length, icon: Building2, color: 'success', href: '/businesses', trend: { direction: 'neutral', label: '0%', value: 'vs last week' } },
+    { label: 'People', value: data.people.length, icon: Users, color: 'secondary', href: '/people', trend: { direction: 'up', label: '+3%', value: 'vs last week' } },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Service Catalogue to Service Request to Help Desk overview</p>
-        </div>
-        <Link href="/requests/new">
-          <button className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-            <Plus size={16} /> New Request
-          </button>
-        </Link>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description="Service Catalogue to Service Request to Help Desk overview"
+        breadcrumbs={[{ label: 'Home', href: '/' }]}
+        action={<Link href="/requests/new"><Button size="lg"><Plus size={16} /> New Request</Button></Link>}
+      />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {stats.map((s) => (
-          <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} color={s.color} href={s.href} loading={loading} />
+          <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} color={s.color} href={s.href} loading={loading} trend={s.trend} />
         ))}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
+        <Card variant="elevated">
           <CardHeader>
             <CardTitle>Recent Service Requests</CardTitle>
             <Link href="/requests" className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">View all</Link>
           </CardHeader>
-          <div className="space-y-2">
+          <div className="space-y-2 p-4">
             {loading ? (
-              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)
+              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
             ) : data.requests.length === 0 ? (
               <EmptyState title="No requests yet" description="Create your first service request to get started." icon={FileText} />
             ) : (
@@ -74,14 +73,14 @@ export default function DashboardPage() {
             )}
           </div>
         </Card>
-        <Card>
+        <Card variant="elevated">
           <CardHeader>
             <CardTitle>Recent Tickets</CardTitle>
             <Link href="/tickets" className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">View all</Link>
           </CardHeader>
-          <div className="space-y-2">
+          <div className="space-y-2 p-4">
             {loading ? (
-              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)
+              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
             ) : data.tickets.length === 0 ? (
               <EmptyState title="No tickets yet" description="Help desk tickets will appear here." icon={Ticket} />
             ) : (

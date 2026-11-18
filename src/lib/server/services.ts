@@ -15,6 +15,23 @@ export function createCategory(input: Partial<ServiceCategory>): ServiceCategory
   const info = db.prepare('INSERT INTO service_categories (name,code,sequence,created_at) VALUES (?,?,?,?)').run(input.name!, input.code!, input.sequence ?? 0, ts);
   return listCategories().find(c=>c.id===Number(info.lastInsertRowid))!;
 }
+export function getCategory(idOrCode: string): ServiceCategory | null {
+  const isNum = /^\d+$/.test(idOrCode);
+  const r = (isNum ? db.prepare('SELECT * FROM service_categories WHERE id=?').get(Number(idOrCode)) : db.prepare('SELECT * FROM service_categories WHERE code=?').get(idOrCode)) as any;
+  if (!r) return null;
+  return { id: r.id, name: r.name, code: r.code, sequence: r.sequence, archivedAt: r.archived_at, createdAt: r.created_at };
+}
+export function updateCategory(idOrCode: string, patch: Partial<ServiceCategory>): ServiceCategory | null {
+  const existing = getCategory(idOrCode); if (!existing) return null;
+  const fields: string[] = []; const params: Record<string,unknown> = { id: existing.id };
+  const map: Record<string,string> = { name:'name', code:'code' };
+  for (const [k,col] of Object.entries(map)) if (Object.prototype.hasOwnProperty.call(patch,k)) { fields.push(`${col}=@${col}`); params[col]=(patch as any)[k] ?? null; }
+  if (patch.sequence !== undefined) { fields.push('sequence=@sequence'); params.sequence = patch.sequence; }
+  if (!fields.length) return existing;
+  db.prepare(`UPDATE service_categories SET ${fields.join(',')} WHERE id=@id`).run(params);
+  return getCategory(String(existing.id));
+}
+export function deleteCategory(idOrCode: string): void { const e = getCategory(idOrCode); if(!e) return; db.prepare('DELETE FROM service_categories WHERE id=?').run(e.id); }
 
 export function listServices(filters: { search?: string; categoryId?: number; active?: boolean } = {}): Service[] {
   const conds: string[] = []; const params: unknown[] = [];
@@ -156,8 +173,11 @@ export function updateVariant(id: number, patch: Partial<ServiceVariant>): Servi
 export function deleteVariant(id: number): void { db.prepare('DELETE FROM service_variants WHERE id=?').run(id); }
 
 // configuration rules
-export function listConfigRules(serviceId: number): ConfigurationRule[] {
-  return (db.prepare('SELECT * FROM configuration_rules WHERE service_id=? ORDER BY id').all(serviceId) as any[]).map(r => ({ id: r.id, serviceId: r.service_id, code: r.code, name: r.name, description: r.description, fieldType: r.field_type, options: JSON.parse(r.options||'[]'), isRequired: !!r.is_required, priceExtra: r.price_extra, isActive: !!r.is_active, createdAt: r.created_at }));
+export function listConfigRules(serviceId?: number): ConfigurationRule[] {
+  if (serviceId !== undefined) {
+    return (db.prepare('SELECT * FROM configuration_rules WHERE service_id=? ORDER BY id').all(serviceId) as any[]).map(r => ({ id: r.id, serviceId: r.service_id, code: r.code, name: r.name, description: r.description, fieldType: r.field_type, options: JSON.parse(r.options||'[]'), isRequired: !!r.is_required, priceExtra: r.price_extra, isActive: !!r.is_active, createdAt: r.created_at }));
+  }
+  return (db.prepare('SELECT * FROM configuration_rules ORDER BY id').all() as any[]).map(r => ({ id: r.id, serviceId: r.service_id, code: r.code, name: r.name, description: r.description, fieldType: r.field_type, options: JSON.parse(r.options||'[]'), isRequired: !!r.is_required, priceExtra: r.price_extra, isActive: !!r.is_active, createdAt: r.created_at }));
 }
 export function createConfigRule(input: Partial<ConfigurationRule> & { serviceId: number }): ConfigurationRule {
   const ts = new Date().toISOString();
@@ -165,6 +185,24 @@ export function createConfigRule(input: Partial<ConfigurationRule> & { serviceId
     .run(input.serviceId, input.code!, input.name!, input.description ?? null, input.fieldType ?? 'text', JSON.stringify(input.options ?? []), input.isRequired?1:0, input.priceExtra ?? 0, input.isActive===false?0:1, ts);
   return listConfigRules(input.serviceId).find(r=>r.id===Number(info.lastInsertRowid))!;
 }
+export function getConfigRule(id: number): ConfigurationRule | null {
+  const r = db.prepare('SELECT * FROM configuration_rules WHERE id=?').get(id) as any;
+  if (!r) return null;
+  return { id: r.id, serviceId: r.service_id, code: r.code, name: r.name, description: r.description, fieldType: r.field_type, options: JSON.parse(r.options||'[]'), isRequired: !!r.is_required, priceExtra: r.price_extra, isActive: !!r.is_active, createdAt: r.created_at };
+}
+export function updateConfigRule(id: number, patch: Partial<ConfigurationRule>): ConfigurationRule | null {
+  const existing = getConfigRule(id); if (!existing) return null;
+  const fields: string[] = []; const params: Record<string,unknown> = { id };
+  const map: Record<string,string> = { code:'code', name:'name', description:'description', fieldType:'field_type', options:'options', priceExtra:'price_extra' };
+  for (const [k,col] of Object.entries(map)) if (Object.prototype.hasOwnProperty.call(patch,k)) { fields.push(`${col}=@${col}`); params[col]=(patch as any)[k] ?? null; }
+  if (patch.options !== undefined) params.options = JSON.stringify(patch.options);
+  if (patch.isRequired !== undefined) { fields.push('is_required=@is_required'); params.is_required = patch.isRequired?1:0; }
+  if (patch.isActive !== undefined) { fields.push('is_active=@is_active'); params.is_active = patch.isActive?1:0; }
+  if (!fields.length) return existing;
+  db.prepare(`UPDATE configuration_rules SET ${fields.join(',')} WHERE id=@id`).run(params);
+  return getConfigRule(id);
+}
+export function deleteConfigRule(id: number): void { db.prepare('DELETE FROM configuration_rules WHERE id=?').run(id); }
 
 // support info
 export function getSupportInfo(serviceId: number): SupportInfo | null {

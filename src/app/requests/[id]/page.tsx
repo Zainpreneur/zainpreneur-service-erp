@@ -48,7 +48,15 @@ export default function RequestDetailPage() {
             <div><span className="text-slate-500 dark:text-slate-500">Required:</span> {req.requiredDate ?? '—'}</div>
             <div><span className="text-slate-500 dark:text-slate-500">Total:</span> {req.currency} {req.totalAmount}</div>
             <div><span className="text-slate-500 dark:text-slate-500">Contact:</span> {req.contactName ?? '—'}</div>
+            <div><span className="text-slate-500 dark:text-slate-500">Contact Role:</span> {req.contactRole ?? '—'}</div>
             <div><span className="text-slate-500 dark:text-slate-500">Email:</span> {req.contactEmail ?? '—'}</div>
+            <div><span className="text-slate-500 dark:text-slate-500">Requested By:</span> {req.requestedBy ?? '—'}</div>
+            <div><span className="text-slate-500 dark:text-slate-500">Special Reqs:</span> {req.specialRequirements ?? '—'}</div>
+            <div><span className="text-slate-500 dark:text-slate-500">Deployment:</span> {req.deployment ?? '—'}</div>
+            <div><span className="text-slate-500 dark:text-slate-500">Scope:</span> {req.scopeMode ?? '—'}</div>
+            <div><span className="text-slate-500 dark:text-slate-500">Preferred Window:</span> {req.preferredWindow ?? '—'}</div>
+            <div><span className="text-slate-500 dark:text-slate-500">Delivered:</span> {req.deliveredAt ?? '—'}</div>
+            <div><span className="text-slate-500 dark:text-slate-500">Closed:</span> {req.closedAt ?? '—'}</div>
           </div>
           {req.description && <p className="mt-4 text-slate-600 dark:text-slate-400">{req.description}</p>}
           {req.addOns?.length ? (

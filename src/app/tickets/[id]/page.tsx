@@ -15,9 +15,21 @@ export default function TicketDetailPage() {
   const [reply, setReply] = useState('');
   const [internal, setInternal] = useState(false);
   const [status, setStatus] = useState('');
+  const [resolution, setResolution] = useState('');
+  const [resolutionSummary, setResolutionSummary] = useState('');
+  const [allTickets, setAllTickets] = useState<any[]>([]);
+  const [relatedIds, setRelatedIds] = useState<number[]>([]);
+  const [selectedRelated, setSelectedRelated] = useState('');
+  const [allTags, setAllTags] = useState<any[]>([]);
+  const [ticketTags, setTicketTags] = useState<any[]>([]);
+  const [selectedTag, setSelectedTag] = useState('');
 
   const load = () => {
-    fetch(`/api/tickets/${id}`).then(r => r.json()).then(d => { setTicket(d); setStatus(d.status); });
+    fetch(`/api/tickets/${id}`).then(r => r.json()).then(d => { setTicket(d); setStatus(d.status); setResolution(d.resolution ?? ''); setResolutionSummary(d.resolutionSummary ?? ''); });
+    fetch('/api/tickets').then(r => r.json()).then((d) => setAllTickets(Array.isArray(d) ? d : []));
+    fetch(`/api/ticket-relations?ticketId=${id}`).then(r => r.json()).then((d) => setRelatedIds(Array.isArray(d) ? d : []));
+    fetch('/api/tags').then(r => r.json()).then((d) => setAllTags(Array.isArray(d) ? d : []));
+    fetch(`/api/entity-tags?entity=ticket&entityId=${id}`).then(r => r.json()).then((d) => setTicketTags(Array.isArray(d) ? d : []));
   };
   useEffect(() => { load(); }, [id]);
 
@@ -29,6 +41,30 @@ export default function TicketDetailPage() {
   };
   const saveStatus = async () => {
     await fetch(`/api/tickets/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    load();
+  };
+  const saveResolution = async () => {
+    await fetch(`/api/tickets/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resolution, resolutionSummary }) });
+    load();
+  };
+  const addRelated = async () => {
+    if (!selectedRelated) return;
+    await fetch('/api/ticket-relations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticketId: Number(id), relatedId: Number(selectedRelated) }) });
+    setSelectedRelated('');
+    load();
+  };
+  const removeRelated = async (rid: number) => {
+    await fetch('/api/ticket-relations', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ticketId: Number(id), relatedId: rid }) });
+    load();
+  };
+  const addTag = async () => {
+    if (!selectedTag) return;
+    await fetch('/api/entity-tags', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: 'ticket', entityId: Number(id), tagId: Number(selectedTag) }) });
+    setSelectedTag('');
+    load();
+  };
+  const removeTag = async (tid: number) => {
+    await fetch('/api/entity-tags', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: 'ticket', entityId: Number(id), tagId: tid }) });
     load();
   };
 
@@ -91,9 +127,59 @@ export default function TicketDetailPage() {
               <div><span className="text-slate-500 dark:text-slate-500">Type:</span> {ticket.type}</div>
               <div><span className="text-slate-500 dark:text-slate-500">Category:</span> {ticket.category}</div>
               <div><span className="text-slate-500 dark:text-slate-500">Contact:</span> {ticket.contactName ?? '—'}</div>
+              <div><span className="text-slate-500 dark:text-slate-500">Contact Role:</span> {ticket.contactRole ?? '—'}</div>
               <div><span className="text-slate-500 dark:text-slate-500">Email:</span> {ticket.contactEmail ?? '—'}</div>
+              <div><span className="text-slate-500 dark:text-slate-500">Assigned Team:</span> {ticket.assignedTeam ?? '—'}</div>
+              <div><span className="text-slate-500 dark:text-slate-500">Resolution:</span> {ticket.resolution ?? '—'}</div>
+              {ticket.resolutionSummary && <div><span className="text-slate-500 dark:text-slate-500">Resolution Summary:</span> {ticket.resolutionSummary}</div>}
               <div><span className="text-slate-500 dark:text-slate-500">SLA Due:</span> {ticket.slaDueAt ? new Date(ticket.slaDueAt).toLocaleString() : '—'}</div>
               {ticket.serviceRequestId && <div><span className="text-slate-500 dark:text-slate-500">Request:</span> <Link href={`/requests/${ticket.serviceRequestId}`} className="text-indigo-400 hover:underline">#{ticket.serviceRequestId}</Link></div>}
+            </div>
+            <div className="mt-3 space-y-2">
+              <label className="block text-sm text-slate-600 dark:text-slate-400">Resolution</label>
+              <Input value={resolution} onChange={e => setResolution(e.target.value)} />
+              <label className="block text-sm text-slate-600 dark:text-slate-400">Resolution Summary</label>
+              <Textarea rows={3} value={resolutionSummary} onChange={e => setResolutionSummary(e.target.value)} />
+              <Button variant="secondary" className="w-full" onClick={saveResolution}>Save Resolution</Button>
+            </div>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Related Tickets</CardTitle></CardHeader>
+            <div className="space-y-2">
+              {relatedIds.map((rid) => (
+                <div key={rid} className="flex items-center justify-between text-sm">
+                  <Link href={`/tickets/${rid}`} className="text-indigo-400 hover:underline">#{rid}</Link>
+                  <Button variant="danger" onClick={() => removeRelated(rid)}>Remove</Button>
+                </div>
+              ))}
+              {relatedIds.length === 0 && <p className="text-slate-500 dark:text-slate-500 text-sm">No related tickets.</p>}
+              <div className="flex gap-2">
+                <Select value={selectedRelated} onChange={e => setSelectedRelated(e.target.value)}>
+                  <option value="">Select ticket</option>
+                  {allTickets.filter((t: any) => String(t.id) !== String(id) && !relatedIds.includes(t.id)).map((t: any) => <option key={t.id} value={t.id}>{t.reference} - {t.title}</option>)}
+                </Select>
+                <Button onClick={addRelated}>Link</Button>
+              </div>
+            </div>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Tags</CardTitle></CardHeader>
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {ticketTags.map((t: any) => (
+                  <Badge key={t.id} color="indigo">
+                    {t.name} <button onClick={() => removeTag(t.id)} className="ml-1 text-xs">×</button>
+                  </Badge>
+                ))}
+                {ticketTags.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-500">No tags.</p>}
+              </div>
+              <div className="flex gap-2">
+                <Select value={selectedTag} onChange={e => setSelectedTag(e.target.value)}>
+                  <option value="">Select tag</option>
+                  {allTags.filter((t: any) => !ticketTags.some((x: any) => x.id === t.id)).map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </Select>
+                <Button onClick={addTag}>Add</Button>
+              </div>
             </div>
           </Card>
           <Card>

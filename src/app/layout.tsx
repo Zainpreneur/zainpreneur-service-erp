@@ -15,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="dark">
       <head>
         <script type="text/tailwind-config" dangerouslySetInnerHTML={{ __html: "tailwind.config = { darkMode: 'class' };" }} />
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script src="https://cdn.tailwindcss.com" />
       </head>
       <body className={inter.className}>

@@ -1,10 +1,10 @@
 import db from '../db';
 import type { HelpdeskTicket, TicketMessage, TicketEvent, TicketInput } from '@/lib/types';
 
-interface Row { id: number; reference: string; business_id: number; service_id: number | null; service_request_id: number | null; title: string; description: string | null; type: string; category: string; priority: string; status: string; assigned_to: number | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; sla_due_at: string | null; resolved_at: string | null; closed_at: string | null; created_at: string; updated_at: string; business_name?: string; service_name?: string; request_reference?: string; assigned_to_name?: string | null; }
+interface Row { id: number; reference: string; business_id: number; service_id: number | null; service_request_id: number | null; variant_id: number | null; title: string; subject: string | null; description: string | null; type: string; category: string; priority: string; status: string; assigned_to: number | null; assigned_team: string | null; contact_name: string | null; contact_email: string | null; contact_phone: string | null; contact_role: string | null; resolution: string | null; resolution_summary: string | null; sla_due_at: string | null; resolved_at: string | null; closed_at: string | null; created_at: string; updated_at: string; business_name?: string; service_name?: string; request_reference?: string; assigned_to_name?: string | null; }
 
 function hydrate(r: Row): HelpdeskTicket {
-  return { id: r.id, reference: r.reference, businessId: r.business_id, businessName: r.business_name, serviceId: r.service_id, serviceName: r.service_name, serviceRequestId: r.service_request_id, requestReference: r.request_reference, title: r.title, description: r.description, type: r.type, category: r.category, priority: r.priority, status: r.status, assignedTo: r.assigned_to, assignedToName: r.assigned_to_name, contactName: r.contact_name, contactEmail: r.contact_email, contactPhone: r.contact_phone, slaDueAt: r.sla_due_at, resolvedAt: r.resolved_at, closedAt: r.closed_at, createdAt: r.created_at, updatedAt: r.updated_at };
+  return { id: r.id, reference: r.reference, businessId: r.business_id, businessName: r.business_name, serviceId: r.service_id, serviceName: r.service_name, serviceRequestId: r.service_request_id, requestReference: r.request_reference, variantId: r.variant_id, title: r.subject || r.title, description: r.description, type: r.type, category: r.category, priority: r.priority, status: r.status, assignedTo: r.assigned_to, assignedToName: r.assigned_to_name, assignedTeam: r.assigned_team, contactName: r.contact_name, contactEmail: r.contact_email, contactPhone: r.contact_phone, contactRole: r.contact_role, resolution: r.resolution, resolutionSummary: r.resolution_summary, slaDueAt: r.sla_due_at, resolvedAt: r.resolved_at, closedAt: r.closed_at, createdAt: r.created_at, updatedAt: r.updated_at };
 }
 
 const SELECT = `SELECT t.*, b.name AS business_name, s.name AS service_name, sr.reference AS request_reference, p.name AS assigned_to_name FROM helpdesk_tickets t JOIN businesses b ON b.id=t.business_id LEFT JOIN services s ON s.id=t.service_id LEFT JOIN service_requests sr ON sr.id=t.service_request_id LEFT JOIN people p ON p.id=t.assigned_to`;
@@ -33,8 +33,8 @@ export function getTicket(idOrRef: string): HelpdeskTicket | null {
 
 export function createTicket(input: TicketInput): HelpdeskTicket {
   const ts = new Date().toISOString();
-  const info = db.prepare(`INSERT INTO helpdesk_tickets (reference,business_id,service_id,service_request_id,title,description,type,category,priority,status,assigned_to,contact_name,contact_email,contact_phone,sla_due_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-    .run('tmp', input.businessId, input.serviceId ?? null, input.serviceRequestId ?? null, input.title, input.description ?? null, input.type, input.category, input.priority ?? 'normal', input.status ?? 'new', input.assignedTo ?? null, input.contactName ?? null, input.contactEmail ?? null, input.contactPhone ?? null, input.slaDueAt ?? null, ts, ts);
+  const info = db.prepare(`INSERT INTO helpdesk_tickets (reference,business_id,service_id,service_request_id,variant_id,title,subject,description,type,category,priority,status,assigned_to,assigned_team,contact_name,contact_email,contact_phone,contact_role,sla_due_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+    .run(`tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`, input.businessId, input.serviceId ?? null, input.serviceRequestId ?? null, input.variantId ?? null, input.title, input.title, input.description ?? null, input.type, input.category, input.priority ?? 'normal', input.status ?? 'new', input.assignedTo ?? null, input.assignedTeam ?? null, input.contactName ?? null, input.contactEmail ?? null, input.contactPhone ?? null, input.contactRole ?? null, input.slaDueAt ?? null, ts, ts);
   const id = Number(info.lastInsertRowid);
   const ref = `TKT-${String(id).padStart(5,'0')}`;
   db.prepare('UPDATE helpdesk_tickets SET reference=? WHERE id=?').run(ref, id);
@@ -46,9 +46,12 @@ export function updateTicket(idOrRef: string, patch: Partial<TicketInput> & Reco
   const existing = getTicket(idOrRef); if (!existing) throw new Error('Ticket not found');
   const fields: string[] = []; const params: Record<string,unknown> = { id: existing.id };
   const map: Record<string,string> = {
-    businessId:'business_id', serviceId:'service_id', serviceRequestId:'service_request_id', title:'title', description:'description', type:'type', category:'category', priority:'priority', status:'status', assignedTo:'assigned_to', contactName:'contact_name', contactEmail:'contact_email', contactPhone:'contact_phone', slaDueAt:'sla_due_at',
+    businessId:'business_id', serviceId:'service_id', serviceRequestId:'service_request_id', variantId:'variant_id', title:'title', description:'description', type:'type', category:'category', priority:'priority', status:'status', assignedTo:'assigned_to', assignedTeam:'assigned_team', contactName:'contact_name', contactEmail:'contact_email', contactPhone:'contact_phone', contactRole:'contact_role', slaDueAt:'sla_due_at',
   };
   for (const [k,col] of Object.entries(map)) if (Object.prototype.hasOwnProperty.call(patch,k)) { fields.push(`${col}=@${col}`); params[col]=(patch as any)[k] ?? null; }
+  if (patch.resolution !== undefined) { fields.push('resolution=@resolution'); params.resolution = patch.resolution; }
+  if (patch.resolutionSummary !== undefined) { fields.push('resolution_summary=@resolution_summary'); params.resolution_summary = patch.resolutionSummary; }
+  if (patch.title !== undefined) { fields.push('subject=@subject'); params.subject = patch.title; }
   if (patch.resolvedAt !== undefined) { fields.push('resolved_at=@resolved_at'); params.resolved_at = patch.resolvedAt; }
   else if (patch.status === 'resolved') { fields.push('resolved_at=@resolved_at'); params.resolved_at = new Date().toISOString(); }
   if (patch.closedAt !== undefined) { fields.push('closed_at=@closed_at'); params.closed_at = patch.closedAt; }
