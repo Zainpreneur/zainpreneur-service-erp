@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Inter } from 'next/font/google';
 import { AppShell } from '@/components/AppShell';
+import { ERPProvider } from '@/lib/erpContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script src="https://cdn.tailwindcss.com" />
       </head>
       <body className={inter.className}>
-        <AppShell>{children}</AppShell>
+        <ERPProvider>
+          <AppShell>{children}</AppShell>
+        </ERPProvider>
       </body>
     </html>
   );

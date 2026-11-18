@@ -445,3 +445,90 @@ export interface TicketInput {
   resolutionSummary?: string;
   slaDueAt?: string;
 }
+
+export interface Organization {
+  id: number;
+  name: string;
+  slug: string;
+  category: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  logo?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Role {
+  id: number;
+  name: string;
+  description?: string | null;
+  isSystem: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Permission {
+  id: number;
+  resource: string;
+  action: string;
+  description?: string | null;
+}
+
+export interface User {
+  id: number;
+  code?: string | null;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  team?: string | null;
+  role?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  organizationId?: number | null;
+  roleInOrg?: string | null;
+}
+
+export interface AuditLog {
+  id: number;
+  userId: number | null;
+  action: string;
+  resource: string;
+  resourceId: string | null;
+  details: Record<string, unknown> | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+export interface OrganizationInput {
+  name: string;
+  slug?: string;
+  category?: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  logo?: string | null;
+}
+
+export interface RoleInput {
+  name: string;
+  description?: string | null;
+  isSystem?: boolean;
+}
+
+export interface PermissionInput {
+  resource: string;
+  action: string;
+  description?: string | null;
+}
+
+export interface AuthInput {
+  email: string;
+  password: string;
+  name: string;
+  code?: string;
+  organizationName?: string;
+}
+

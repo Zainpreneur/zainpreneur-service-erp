@@ -285,7 +285,7 @@ CREATE TABLE IF NOT EXISTS ticket_events (
 `);
 
 // ---- Parity migrations (idempotent) ----
-function tryAlter(sql: string) { try { db.exec(sql); } catch (e) { /* column/table already exists */ } }
+function tryAlter(sql: string) { try { db.exec(sql); } catch { /* column/table already exists */ } }
 
 // businesses
 tryAlter(`ALTER TABLE businesses ADD COLUMN code TEXT`);
@@ -324,6 +324,7 @@ tryAlter(`ALTER TABLE people ADD COLUMN tax_document_status TEXT NOT NULL DEFAUL
 tryAlter(`ALTER TABLE people ADD COLUMN tax_document_expires TEXT`);
 tryAlter(`ALTER TABLE people ADD COLUMN payable_schedule TEXT`);
 tryAlter(`ALTER TABLE people ADD COLUMN bank_account_ref TEXT`);
+tryAlter(`ALTER TABLE people ADD COLUMN password_hash TEXT`);
 
 // services
 tryAlter(`ALTER TABLE services ADD COLUMN archived_reason TEXT`);
@@ -442,7 +443,217 @@ CREATE TABLE IF NOT EXISTS person_tags (
   tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
   PRIMARY KEY (person_id, tag_id)
 );
+
+// ======================
+//  MULTI-TENANCY & RBAC
+// ======================
+
+CREATE TABLE IF NOT EXISTS organizations (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT NOT NULL,
+  slug        TEXT NOT NULL UNIQUE,
+  category    TEXT NOT NULL DEFAULT 'services',
+  address     TEXT,
+  phone       TEXT,
+  email       TEXT,
+  logo        TEXT,
+  is_active   INTEGER NOT NULL DEFAULT 1,
+  created_at  TEXT NOT NULL,
+  updated_at  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS organization_users (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  organization_id INTEGER NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id         INTEGER NOT NULL REFERENCES people(id) ON DELETE CASCADE,
+  role_in_org     TEXT NOT NULL DEFAULT 'MEMBER',
+  created_at      TEXT NOT NULL,
+  updated_at      TEXT NOT NULL,
+  UNIQUE(organization_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS roles (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT NOT NULL UNIQUE,
+  description TEXT,
+  is_system   INTEGER NOT NULL DEFAULT 0,
+  created_at  TEXT NOT NULL,
+  updated_at  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS permissions (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  resource    TEXT NOT NULL,
+  action      TEXT NOT NULL,
+  description TEXT,
+  UNIQUE(resource, action)
+);
+
+CREATE TABLE IF NOT EXISTS role_permissions (
+  role_id       INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+  permission_id INTEGER NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
+  PRIMARY KEY (role_id, permission_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_roles (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     INTEGER NOT NULL REFERENCES people(id) ON DELETE CASCADE,
+  role_id     INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+  UNIQUE(user_id, role_id)
+);
+
+// ======================
+//  AUDIT LOG
+// ======================
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER REFERENCES people(id),
+  action     TEXT NOT NULL,
+  resource   TEXT NOT NULL,
+  resource_id TEXT,
+  details    TEXT,
+  ip_address TEXT,
+  user_agent TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_resource ON audit_logs(resource, resource_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
 `);
 
+// ======================
+//  DEFAULT SEED DATA
+// ======================
+
+const now = new Date().toISOString();
+
+// Default organization
+const existingOrg = db.prepare('SELECT id FROM organizations LIMIT 1').get() as { id: number } | undefined;
+let orgId: number;
+if (!existingOrg) {
+  const info = db.prepare(
+    'INSERT INTO organizations (name, slug, category, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run('Zainpreneur Services', 'zainpreneur-services', 'services', 1, now, now);
+  orgId = Number(info.lastInsertRowid);
+} else {
+  orgId = existingOrg.id;
+}
+
+// Default roles
+const roles: Array<{ name: string; description: string | null; is_system: number }> = [
+  { name: 'OWNER', description: 'Full access to all resources', is_system: 1 },
+  { name: 'ADMIN', description: 'Administrative access to most resources', is_system: 1 },
+  { name: 'MANAGER', description: 'Manage operations and approve requests', is_system: 1 },
+  { name: 'MEMBER', description: 'Standard member access', is_system: 1 },
+  { name: 'VIEWER', description: 'Read-only access', is_system: 1 },
+];
+
+const roleIds: Record<string, number> = {};
+for (const r of roles) {
+  const existing = db.prepare('SELECT id FROM roles WHERE name = ?').get(r.name) as { id: number } | undefined;
+  if (!existing) {
+    const info = db.prepare(
+      'INSERT INTO roles (name, description, is_system, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
+    ).run(r.name, r.description, r.is_system, now, now);
+    roleIds[r.name] = Number(info.lastInsertRowid);
+  } else {
+    roleIds[r.name] = existing.id;
+  }
+}
+
+// Default permissions
+const permissions: Array<{ resource: string; action: string; description: string | null }> = [
+  { resource: 'services', action: 'create', description: 'Create services' },
+  { resource: 'services', action: 'read', description: 'View services' },
+  { resource: 'services', action: 'update', description: 'Update services' },
+  { resource: 'services', action: 'delete', description: 'Delete services' },
+  { resource: 'requests', action: 'create', description: 'Create service requests' },
+  { resource: 'requests', action: 'read', description: 'View service requests' },
+  { resource: 'requests', action: 'update', description: 'Update service requests' },
+  { resource: 'requests', action: 'delete', description: 'Delete service requests' },
+  { resource: 'tickets', action: 'create', description: 'Create help desk tickets' },
+  { resource: 'tickets', action: 'read', description: 'View help desk tickets' },
+  { resource: 'tickets', action: 'update', description: 'Update help desk tickets' },
+  { resource: 'tickets', action: 'delete', description: 'Delete help desk tickets' },
+  { resource: 'businesses', action: 'create', description: 'Create businesses' },
+  { resource: 'businesses', action: 'read', description: 'View businesses' },
+  { resource: 'businesses', action: 'update', description: 'Update businesses' },
+  { resource: 'businesses', action: 'delete', description: 'Delete businesses' },
+  { resource: 'people', action: 'create', description: 'Create people records' },
+  { resource: 'people', action: 'read', description: 'View people records' },
+  { resource: 'people', action: 'update', description: 'Update people records' },
+  { resource: 'people', action: 'delete', description: 'Delete people records' },
+  { resource: 'attributes', action: 'create', description: 'Create attributes' },
+  { resource: 'attributes', action: 'read', description: 'View attributes' },
+  { resource: 'attributes', action: 'update', description: 'Update attributes' },
+  { resource: 'attributes', action: 'delete', description: 'Delete attributes' },
+  { resource: 'roles', action: 'read', description: 'View roles' },
+  { resource: 'permissions', action: 'read', description: 'View permissions' },
+  { resource: 'audit_logs', action: 'read', description: 'View audit logs' },
+];
+
+const permIds: Record<string, number> = {};
+for (const p of permissions) {
+  const existing = db.prepare('SELECT id FROM permissions WHERE resource = ? AND action = ?').get(p.resource, p.action) as { id: number } | undefined;
+  if (!existing) {
+    const info = db.prepare(
+      'INSERT INTO permissions (resource, action, description) VALUES (?, ?, ?)'
+    ).run(p.resource, p.action, p.description);
+    permIds[`${p.resource}:${p.action}`] = Number(info.lastInsertRowid);
+  } else {
+    permIds[`${p.resource}:${p.action}`] = existing.id;
+  }
+}
+
+// Grant all permissions to OWNER role
+const ownerRoleId = roleIds['OWNER'];
+for (const [, permId] of Object.entries(permIds)) {
+  const existing = db.prepare(
+    'SELECT id FROM role_permissions WHERE role_id = ? AND permission_id = ?'
+  ).get(ownerRoleId, permId) as { id: number } | undefined;
+  if (!existing) {
+    db.prepare(
+      'INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)'
+    ).run(ownerRoleId, permId);
+  }
+}
+
+// Default admin user
+function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+function verifyPassword(password: string, stored: string): boolean {
+  const [salt, hash] = stored.split(':');
+  const verifyHash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return hash === verifyHash;
+}
+
+const existingAdmin = db.prepare("SELECT id FROM people WHERE email = ?").get('admin@zainpreneur.com') as { id: number } | undefined;
+if (!existingAdmin) {
+  const info = db.prepare(
+    `INSERT INTO people (code, name, email, phone, team, role, is_active, created_at, password_hash)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run('ADMIN-001', 'System Administrator', 'admin@zainpreneur.com', null, 'Administration', 'Administrator', 1, now, hashPassword('admin123'));
+  const adminId = Number(info.lastInsertRowid);
+
+  // Link admin to organization as OWNER
+  db.prepare(
+    'INSERT INTO organization_users (organization_id, user_id, role_in_org, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
+  ).run(orgId, adminId, 'OWNER', now, now);
+
+  // Grant OWNER role to admin
+  db.prepare(
+    'INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)'
+  ).run(adminId, ownerRoleId);
+}
+
+// Log system initialization
+db.prepare(
+  'INSERT INTO audit_logs (user_id, action, resource, resource_id, details, ip_address, user_agent, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+).run(null, 'SYSTEM_INIT', 'system', null, JSON.stringify({ orgId, orgName: 'Zainpreneur Services' }), null, 'system', now);
+
 export default db;
-export { db };
+export { db, hashPassword, verifyPassword };
