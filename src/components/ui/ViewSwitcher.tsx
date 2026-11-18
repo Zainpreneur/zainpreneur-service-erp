@@ -25,7 +25,7 @@ export function ViewSwitcher({
   className?: string;
 }) {
   return (
-    <div className={cn('inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1', className)}>
+    <div className={cn('glass-subtle inline-flex items-center rounded-lg p-1', className)}>
       {options.map((opt) => {
         const Icon = icons[opt];
         const active = value === opt;

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { Input, Select, Textarea } from '@/components/ui/Input';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -196,7 +197,7 @@ export default function NewRequestPage() {
                 error={errors.priority ? true : undefined}
               >
                 <option value="low">Low</option>
-                <option value="normal" selected="">Normal</option>
+                <option value="normal">Normal</option>
                 <option value="high">High</option>
                 <option value="urgent">Urgent</option>
               </Select>
@@ -211,7 +212,7 @@ export default function NewRequestPage() {
                 onChange={e => setForm({ ...form, status: e.target.value })}
                 error={errors.status ? true : undefined}
               >
-                <option value="draft" selected="">Draft</option>
+                <option value="draft">Draft</option>
                 <option value="new">New</option>
                 <option value="in_progress">In Progress</option>
               </Select>

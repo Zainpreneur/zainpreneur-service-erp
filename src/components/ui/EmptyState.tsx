@@ -15,7 +15,7 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 px-6 py-12 text-center', className)}>
+    <div className={cn('flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-slate-300/60 dark:border-slate-700/60 bg-white/30 dark:bg-slate-900/30 backdrop-blur-md px-6 py-12 text-center', className)}>
       {Icon && (
         <div className="rounded-full bg-indigo-100 dark:bg-indigo-600/20 p-3 text-indigo-600 dark:text-indigo-400">
           <Icon size={24} />

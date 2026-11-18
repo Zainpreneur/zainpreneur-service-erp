@@ -20,7 +20,7 @@ export function Modal({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Content className={cn('fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xl focus:outline-none', sizeCls)}>
+        <Dialog.Content className={cn('glass-panel fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl p-6 shadow-xl focus:outline-none', sizeCls)}>
           {(title || description) && (
             <div className="mb-4">
               {title && <Dialog.Title className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</Dialog.Title>}

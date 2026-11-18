@@ -82,7 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl">
+          <aside className="glass absolute inset-y-0 left-0 w-72 border-r border-slate-200/60 dark:border-slate-700/60 shadow-xl">
             <div className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 px-5">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-600 to-cyan-400" />
@@ -109,7 +109,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Desktop sidebar */}
-      <aside className={`hidden lg:flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all duration-200 ${collapsed ? 'w-20' : 'w-64'}`}>
+      <aside className={`hidden lg:flex flex-col border-r border-slate-200 dark:border-slate-800 glass transition-all duration-200 ${collapsed ? 'w-20' : 'w-64'}`}>
         <div className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4">
           <div className="flex items-center gap-2 overflow-hidden">
             <div className="h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br from-indigo-600 to-cyan-400" />
@@ -143,7 +143,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main */}
       <div className="flex flex-1 flex-col min-w-0">
-        <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 backdrop-blur px-4 lg:px-6">
+        <header className="glass flex h-16 items-center justify-between border-b border-slate-200/60 dark:border-slate-700/60 px-4 lg:px-6">
           <div className="flex items-center gap-3">
             <button className="lg:hidden rounded-md p-2 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setOpen(true)} aria-label="Open menu">
               <Menu size={20} />
@@ -165,7 +165,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 inset-x-0 z-30 flex items-center justify-around border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur lg:hidden">
+      <nav className="glass fixed bottom-0 inset-x-0 z-30 flex items-center justify-around border-t border-slate-200/60 dark:border-slate-700/60 lg:hidden">
         {bottomNav.map((n) => {
           const active = pathname === n.href || (n.href !== '/' && pathname.startsWith(n.href));
           const Icon = n.icon;
@@ -175,7 +175,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="hidden sm:block">{n.label}</span>
             </Link>
           );
-        })</nav>
+        })}</nav>
 
       <Toaster theme={resolvedTheme} position="top-right" />
     </div>

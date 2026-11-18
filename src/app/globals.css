@@ -90,10 +90,86 @@ body {
   color-scheme: light;
 }
 
-.glass {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(148, 163, 184, 0.1);
+/* Glassmorphism primitives */
+.glass,
+.glass-panel,
+.glass-card {
+  position: relative;
+  backdrop-filter: blur(14px) saturate(170%);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 8px 32px rgba(2, 6, 23, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.glass-panel {
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+.glass-card {
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+/* Stronger / softer variants */
+.glass-strong {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    0 12px 40px rgba(2, 6, 23, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.glass-subtle {
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  box-shadow:
+    0 4px 16px rgba(2, 6, 23, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Hover lift for interactive glass cards */
+.glass-card-hover:hover,
+.glass-panel-hover:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 36px rgba(2, 6, 23, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* Theme-aware surfaces */
+.dark .glass,
+.dark .glass-panel,
+.dark .glass-card,
+.dark .glass-strong,
+.dark .glass-subtle {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--card-foreground);
+}
+
+.light .glass,
+.light .glass-panel,
+.light .glass-card,
+.light .glass-strong,
+.light .glass-subtle {
+  background: rgba(255, 255, 255, 0.60);
+  border-color: rgba(255, 255, 255, 0.70);
+  box-shadow:
+    0 8px 32px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  color: var(--card-foreground);
+}
+
+/* Fallback when backdrop-filter unsupported */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .glass-panel, .glass-card, .glass-strong, .glass-subtle {
+    background: var(--card);
+  }
 }
 
 input, select, textarea {
